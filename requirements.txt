@@ -1,0 +1,6 @@
+langchain-google-vertexai
+python-dotenv
+langchain-core
+langchain-openai
+fastapi
+uvicorn
