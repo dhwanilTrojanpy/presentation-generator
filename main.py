@@ -48,14 +48,8 @@ async def generate_outline(request: OutlineGeneratorRequest):
         # Create prompt template correctly
         prompt = PromptTemplate(
             template=template,
-            input_variables=["context", "numberOfSlides",
-                             "gradeLevel"]  # List of variable names
+            input_variables=["context", "numberOfSlides", "gradeLevel"]
         )
-        test_input = {
-            "context": "Climate Change",
-            "numberOfSlides": 4,
-            "gradeLevel": "HIGHSCHOOL"
-        }
 
         # Create chain
         parser = JsonOutputParser(pydantic_object=OutlineGeneratorResponse)
@@ -67,11 +61,17 @@ async def generate_outline(request: OutlineGeneratorRequest):
             "numberOfSlides": request.numberOfSlides,
             "gradeLevel": request.gradeLevel
         })
-
-        # result = await chain.ainvoke(test_input)
-
-        return result
+        
+        # Ensure we're returning a properly formatted response
+        if isinstance(result, dict) and "outlines" in result:
+            return result
+        else:
+            # If result is not properly formatted, create a valid response
+            return OutlineGeneratorResponse(outlines=result if isinstance(result, list) else [str(result)])
 
     except Exception as e:
-        raise HTTPException(status_code=500,
-                            )  # Use getenv() instead of environ[]
+        print(f"Error generating outline: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate outline: {str(e)}"
+        )
