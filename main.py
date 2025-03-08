@@ -10,10 +10,6 @@ import os
 
 load_dotenv()
 
-print("Current directory:", os.getcwd())
-print("Environment variables:", os.environ)
-print("API Key exists?", "OPENAI_API_KEY" in os.environ)
-
 app = FastAPI()
 origins = [
     "http://localhost:3000",
@@ -48,30 +44,40 @@ async def generate_outline(request: OutlineGeneratorRequest):
         # Create prompt template correctly
         prompt = PromptTemplate(
             template=template,
-            input_variables=["context", "numberOfSlides", "gradeLevel"]
-        )
-
-        # Create chain
-        parser = JsonOutputParser(pydantic_object=OutlineGeneratorResponse)
-        chain = prompt | model | parser
+            input_variables=["context", "numberOfSlides", "gradeLevel"])
 
         # Invoke the chain
-        result = await chain.ainvoke({
+        chain = prompt | model
+        # Invoke the chain to get raw output
+        raw_result = await chain.ainvoke({
             "context": request.context,
             "numberOfSlides": request.numberOfSlides,
             "gradeLevel": request.gradeLevel
         })
-        
+        # print("Raw result ---->>>>> ", raw_result)
+
         # Ensure we're returning a properly formatted response
-        if isinstance(result, dict) and "outlines" in result:
-            return result
+        if hasattr(raw_result, 'content'):
+            content = raw_result.content
         else:
-            # If result is not properly formatted, create a valid response
-            return OutlineGeneratorResponse(outlines=result if isinstance(result, list) else [str(result)])
+            content = str(raw_result)
+
+        # Parse the list items from the output
+        outlines = []
+        for line in content.split('\n'):
+            line = line.strip()
+
+            # Look for lines that start with a number followed by a period
+            if line and (line.startswith('**') or line.startswith('1.')
+                         or line[0].isdigit() and '.' in line[:5]):
+                # Clean up the outline text
+                clean_line = line.replace('**', '').strip()
+                outlines.append(clean_line)
+
+        # Return the properly formatted response
+        return OutlineGeneratorResponse(outlines=outlines)
 
     except Exception as e:
         print(f"Error generating outline: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate outline: {str(e)}"
-        )
+        raise HTTPException(status_code=500,
+                            detail=f"Failed to generate outline: {str(e)}")
