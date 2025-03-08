@@ -5,7 +5,7 @@ from langchain_core.prompts import PromptTemplate  # Fixed import
 from langchain_openai import ChatOpenAI  # Changed to ChatOpenAI
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-from langchain_core.output_parsers import JsonOutputParser
+# from langchain_core.output_parsers import JsonOutputParser
 import os
 
 load_dotenv()
@@ -25,9 +25,8 @@ app.add_middleware(
 )
 
 # Initialize the correct model for chat
-model = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"),
-                   model="gpt-3.5-turbo",
-                   temperature=0.7)  # Changed to ChatOpenAI
+model = ChatOpenAI(model="gpt-3.5-turbo",
+                   temperature=0.7) 
 
 
 @app.get("/")
