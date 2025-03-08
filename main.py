@@ -28,35 +28,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # Initialize the correct model for chat
-model = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"),model="gpt-3.5-turbo", temperature=0.7)  # Changed to ChatOpenAI
+model = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"),
+                   model="gpt-3.5-turbo",
+                   temperature=0.7)  # Changed to ChatOpenAI
+
 
 @app.get("/")
 def root():
     return {"message": "Creating My Teaching Assistant"}
+
 
 @app.post("/generate-outline", response_model=OutlineGeneratorResponse)
 async def generate_outline(request: OutlineGeneratorRequest):
     try:
         # Load template
         template = load_text_file("prompts/outline_generation_prompt.txt")
-        
+
         # Create prompt template correctly
         prompt = PromptTemplate(
             template=template,
-            input_variables=["context", "numberOfSlides", "gradeLevel"]  # List of variable names
+            input_variables=["context", "numberOfSlides",
+                             "gradeLevel"]  # List of variable names
         )
         test_input = {
             "context": "Climate Change",
             "numberOfSlides": 4,
             "gradeLevel": "HIGHSCHOOL"
         }
-        
+
         # Create chain
         parser = JsonOutputParser(pydantic_object=OutlineGeneratorResponse)
         chain = prompt | model | parser
-        
+
         # Invoke the chain
         # result = await chain.ainvoke({
         #     "context": request.context,
@@ -65,10 +69,9 @@ async def generate_outline(request: OutlineGeneratorRequest):
         # })
 
         result = await chain.ainvoke(test_input)
-        
+
         return result
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-                ) # Use getenv() instead of environ[]
+        raise HTTPException(status_code=500,
+                            )  # Use getenv() instead of environ[]
