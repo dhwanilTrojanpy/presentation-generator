@@ -62,13 +62,13 @@ async def generate_outline(request: OutlineGeneratorRequest):
         chain = prompt | model | parser
 
         # Invoke the chain
-        # result = await chain.ainvoke({
-        #     "context": request.context,
-        #     "numberOfSlides": request.numberOfSlides,
-        #     "gradeLevel": request.gradeLevel
-        # })
+        result = await chain.ainvoke({
+            "context": request.context,
+            "numberOfSlides": request.numberOfSlides,
+            "gradeLevel": request.gradeLevel
+        })
 
-        result = await chain.ainvoke(test_input)
+        # result = await chain.ainvoke(test_input)
 
         return result
 
