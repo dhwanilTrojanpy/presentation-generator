@@ -5,20 +5,16 @@ from langchain_core.prompts import PromptTemplate  # Fixed import
 from langchain_openai import ChatOpenAI  # Changed to ChatOpenAI
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-# from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.output_parsers import JsonOutputParser
 import os
 
 load_dotenv()
 
 app = FastAPI()
-origins = [
-    "http://localhost:3000",
-    "http://localhost:8000",
-]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,6 +33,7 @@ def root():
 @app.post("/generate-outline", response_model=OutlineGeneratorResponse)
 async def generate_outline(request: OutlineGeneratorRequest):
     try:
+        print(f"Request: {request}")
         # Load template
         template = load_text_file("prompts/outline_generation_prompt.txt")
 
@@ -70,7 +67,7 @@ async def generate_outline(request: OutlineGeneratorRequest):
             if line and (line.startswith('**') or line.startswith('1.')
                          or line[0].isdigit() and '.' in line[:5]):
                 # Clean up the outline text
-                clean_line = line.replace('**', '').strip()
+                clean_line = line.replace('**', '').strip().replace('"', '')
                 outlines.append(clean_line)
 
         # Return the properly formatted response
