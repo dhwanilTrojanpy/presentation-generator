@@ -1,52 +1,61 @@
-import { useState } from 'react';
-import './App.css';
-import axios from 'axios';
+import { useState } from "react";
+import "./App.css";
+import axios from "axios";
+import OutlineHandler from "./components/OutlineHandler";
+import InputHandler from "./components/InputHandler";
+import { useRef } from 'react';
 
 function App() {
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
-    topic: '',
-    slidesNumber: 5,
-    gradeLevel: 'High School',
+    topic: "",
+    slidesNumber: 0,
+    gradeLevel: "HIGHSCHOOL",
+    file: null
   });
   const [outlines, setOutlines] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleChange = (e) => {
+    console.log("formdata",e.target);
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
     });
   };
-// Mock generating outlines without API call
-// setTimeout(() => {
-//   const mockOutlines = [
-//     "1. The Water Cycle: Earth's Natural Recycling System",
-//     "2. Evaporation in Action: From Oceans to Atmosphere",
-//     "3. Cloud Formation: Condensation and Atmospheric Dynamics",
-//     "4. Precipitation Patterns: Regional Variations and Climate Impact",
-//     "5. Groundwater Systems: The Invisible Reservoir"
-//   ];
-  
-//   setOutlines(mockOutlines);
-//   setIsGenerating(false);
-// }, 1500);
-  
-const handleSubmit = (e) => {
+
+  const handleFileChange = (e) => {
+    console.log("formdata",e.target);
+    setFormData({
+      ...formData,
+      file: fileInputRef.current.files[0] || null 
+    });
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     setIsGenerating(true);
-    
-    const response = axios.post('http://localhost:8000/generate-outlines', formData)
+    console.log("formdata",formData);
+    console.log("file",fileInputRef.current.files[0]);
+    axios
+      .post("http://localhost:8000/generate-outline", {
+        context: formData.topic,
+        numberOfSlides: formData.slidesNumber,
+        gradeLevel: formData.gradeLevel,
+        file:formData.file || fileInputRef.current.value
+      })
       .then((response) => {
-        setOutlines(response.data.outlines);
+        console.log("response",response);
         setIsGenerating(false);
+        setOutlines(response.data.outlines);
+        console.log("outlines",outlines);
       })
       .catch((error) => {
-        console.error('Error generating outlines:', error);
+        console.error("Error generating outlines:", error);
         setIsGenerating(false);
       });
-    
-    return response;
+    // return response;
   };
 
   return (
@@ -58,83 +67,21 @@ const handleSubmit = (e) => {
 
       <main>
         <section className="form-section">
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="topic">Presentation Topic:</label>
-              <input
-                type="text"
-                id="topic"
-                name="topic"
-                value={formData.topic}
-                onChange={handleChange}
-                placeholder="e.g., The Water Cycle"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="slidesNumber">Number of Slides:</label>
-              <input
-                type="number"
-                id="slidesNumber"
-                name="slidesNumber"
-                min="3"
-                max="20"
-                value={formData.slidesNumber}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="gradeLevel">Grade Level:</label>
-              <select
-                id="gradeLevel"
-                name="gradeLevel"
-                value={formData.gradeLevel}
-                onChange={handleChange}
-                required
-              >
-                <option value="Elementary School">Elementary School</option>
-                <option value="Middle School">Middle School</option>
-                <option value="High School">High School</option>
-                <option value="College">College</option>
-              </select>
-            </div>
-
-            <button type="submit" disabled={isGenerating} className="submit-btn">
-              {isGenerating ? 'Generating...' : 'Generate Outline'}
-            </button>
-          </form>
+          <InputHandler 
+          handleSubmit={handleSubmit}
+          handleChange={handleChange}
+          formData={formData}
+          isGenerating={isGenerating}
+          handleFileChange={handleFileChange}
+          fileInputRef={fileInputRef} />
         </section>
 
         <section className="results-section">
-          <h2>Your Presentation Outline</h2>
-          {outlines.length > 0 ? (
-            <div className="outline-container">
-              <ul className="outline-list">
-                {outlines.map((outline, index) => (
-                  <li key={index} className="outline-item">
-                    {outline}
-                  </li>
-                ))}
-              </ul>
-              <div className="outline-actions">
-                <button className="action-btn">
-                  Save Outline
-                </button>
-                <button className="action-btn">
-                  Export as PDF
-                </button>
-              </div>
-            </div>
-          ) : (
-            <p className="no-results">
-              {isGenerating 
-                ? 'Creating your outline...' 
-                : 'Enter your topic details and click "Generate Outline" to create a presentation outline.'}
-            </p>
-          )}
+          <OutlineHandler 
+          outlines={outlines}
+          isGenerating={isGenerating}  
+          setOutlines={setOutlines}
+          / >
         </section>
       </main>
 

@@ -1,6 +1,10 @@
 langchain-google-vertexai
 python-dotenv
 langchain-core
+langchain-community
 langchain-openai
 fastapi
 uvicorn
+pypdf
+langchain
+chromadb==0.4.15
