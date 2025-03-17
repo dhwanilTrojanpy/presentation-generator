@@ -31,10 +31,16 @@ def root():
 
 
 @app.post("/generate-outline", response_model=OutlineGeneratorResponse)
-async def generate_outline(request: OutlineGeneratorRequest):
+async def generate_outline(
+    context: str,
+    numberOfSlides: int,
+    gradeLevel: str,
+    file: UploadFile = None
+):
     try:
-        if request.file is None:
-            file_path = await save_uploaded_file(request.file.filename)
+        file_path = None
+        if file:
+            file_path = await save_uploaded_file(file)
             print(f"File saved at {file_path}")
             db = await get_file_vectors(file_path)
             print(f"DB: {db}")

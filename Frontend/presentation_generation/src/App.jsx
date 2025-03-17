@@ -38,12 +38,19 @@ function App() {
     setIsGenerating(true);
     console.log("formdata",formData);
     console.log("file",fileInputRef.current.files[0]);
+    const form = new FormData();
+    form.append("context", formData.topic);
+    form.append("numberOfSlides", formData.slidesNumber);
+    form.append("gradeLevel", formData.gradeLevel);
+    if (formData.file) {
+      form.append("file", formData.file);
+    }
+    
     axios
-      .post("http://localhost:8000/generate-outline", {
-        context: formData.topic,
-        numberOfSlides: formData.slidesNumber,
-        gradeLevel: formData.gradeLevel,
-        file:formData.file || fileInputRef.current.value
+      .post("http://localhost:8000/generate-outline", form, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       })
       .then((response) => {
         console.log("response",response);
