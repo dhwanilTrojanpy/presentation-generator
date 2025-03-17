@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from services.schema import OutlineGeneratorRequest, OutlineGeneratorResponse
-from services.utils import load_text_file
+from services.utils import save_uploaded_file, load_text_file,get_file_vectors
 from langchain_core.prompts import PromptTemplate  # Fixed import
 from langchain_openai import ChatOpenAI  # Changed to ChatOpenAI
 from dotenv import load_dotenv
@@ -11,14 +11,10 @@ import os
 load_dotenv()
 
 app = FastAPI()
-origins = [
-    "http://localhost:3000",
-    "http://localhost:8000",
-]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,7 +33,11 @@ def root():
 @app.post("/generate-outline", response_model=OutlineGeneratorResponse)
 async def generate_outline(request: OutlineGeneratorRequest):
     try:
-        # Load template
+        if request.file is None:
+            file_path = await save_uploaded_file(request.file.filename)
+            print(f"File saved at {file_path}")
+            db = await get_file_vectors(file_path)
+            print(f"DB: {db}")
         template = load_text_file("prompts/outline_generation_prompt.txt")
 
         # Create prompt template correctly
@@ -53,6 +53,8 @@ async def generate_outline(request: OutlineGeneratorRequest):
             "numberOfSlides": request.numberOfSlides,
             "gradeLevel": request.gradeLevel
         })
+        # print("raw_result ", raw_result)
+
         # print("Raw result ---->>>>> ", raw_result)
 
         # Ensure we're returning a properly formatted response
@@ -70,7 +72,7 @@ async def generate_outline(request: OutlineGeneratorRequest):
             if line and (line.startswith('**') or line.startswith('1.')
                          or line[0].isdigit() and '.' in line[:5]):
                 # Clean up the outline text
-                clean_line = line.replace('**', '').strip()
+                clean_line = line.replace('**', '').strip().replace('"', '')
                 outlines.append(clean_line)
 
         # Return the properly formatted response
@@ -80,3 +82,13 @@ async def generate_outline(request: OutlineGeneratorRequest):
         print(f"Error generating outline: {str(e)}")
         raise HTTPException(status_code=500,
                             detail=f"Failed to generate outline: {str(e)}")
+
+
+@app.post("/save-outline", response_model=OutlineGeneratorResponse)
+async def save_outline(request: OutlineGeneratorResponse):
+    try:    
+        print(f"Request: {request}")
+        return OutlineGeneratorResponse(outlines=request.outlines)
+
+    except Exception as e:    
+        print(f"Error saving outline: {str(e)}")

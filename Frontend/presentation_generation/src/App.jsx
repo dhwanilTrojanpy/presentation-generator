@@ -1,35 +1,95 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import "./App.css";
+import axios from "axios";
+import OutlineHandler from "./components/OutlineHandler";
+import InputHandler from "./components/InputHandler";
+import { useRef } from 'react';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const fileInputRef = useRef(null);
+  const [formData, setFormData] = useState({
+    topic: "",
+    slidesNumber: 0,
+    gradeLevel: "HIGHSCHOOL",
+    file: null
+  });
+  const [outlines, setOutlines] = useState([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleChange = (e) => {
+    console.log("formdata",e.target);
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleFileChange = (e) => {
+    console.log("formdata",e.target);
+    setFormData({
+      ...formData,
+      file: fileInputRef.current.files[0] || null 
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setIsGenerating(true);
+    console.log("formdata",formData);
+    console.log("file",fileInputRef.current.files[0]);
+    axios
+      .post("http://localhost:8000/generate-outline", {
+        context: formData.topic,
+        numberOfSlides: formData.slidesNumber,
+        gradeLevel: formData.gradeLevel,
+        file:formData.file || fileInputRef.current.value
+      })
+      .then((response) => {
+        console.log("response",response);
+        setIsGenerating(false);
+        setOutlines(response.data.outlines);
+        console.log("outlines",outlines);
+      })
+      .catch((error) => {
+        console.error("Error generating outlines:", error);
+        setIsGenerating(false);
+      });
+    // return response;
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="app-container">
+      <header>
+        <h1>Presentation Generator</h1>
+        <p>Create engaging educational presentation in seconds</p>
+      </header>
+
+      <main>
+        <section className="form-section">
+          <InputHandler 
+          handleSubmit={handleSubmit}
+          handleChange={handleChange}
+          formData={formData}
+          isGenerating={isGenerating}
+          handleFileChange={handleFileChange}
+          fileInputRef={fileInputRef} />
+        </section>
+
+        <section className="results-section">
+          <OutlineHandler 
+          outlines={outlines}
+          isGenerating={isGenerating}  
+          setOutlines={setOutlines}
+          / >
+        </section>
+      </main>
+
+      <footer>
+        <p>Presentation Outline Generator &copy; {new Date().getFullYear()}</p>
+      </footer>
+    </div>
+  );
 }
 
-export default App
+export default App;
