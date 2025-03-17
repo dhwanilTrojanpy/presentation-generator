@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi import FastAPI, HTTPException, UploadFile, Form
 from services.schema import OutlineGeneratorRequest, OutlineGeneratorResponse
 from services.utils import save_uploaded_file, load_text_file,get_file_vectors
 from langchain_core.prompts import PromptTemplate  # Fixed import
@@ -32,9 +32,9 @@ def root():
 
 @app.post("/generate-outline", response_model=OutlineGeneratorResponse)
 async def generate_outline(
-    context: str,
-    numberOfSlides: int,
-    gradeLevel: str,
+    context: str = Form(...),
+    numberOfSlides: int = Form(...),
+    gradeLevel: str = Form(...),
     file: UploadFile = None
 ):
     try:
