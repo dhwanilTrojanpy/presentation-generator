@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile
 from services.schema import OutlineGeneratorRequest, OutlineGeneratorResponse
 from services.utils import save_uploaded_file, load_text_file,get_file_vectors
 from langchain_core.prompts import PromptTemplate  # Fixed import
