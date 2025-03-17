@@ -55,9 +55,9 @@ async def generate_outline(
         chain = prompt | model
         # Invoke the chain to get raw output
         raw_result = await chain.ainvoke({
-            "context": request.context,
-            "numberOfSlides": request.numberOfSlides,
-            "gradeLevel": request.gradeLevel
+            "context": context,
+            "numberOfSlides": numberOfSlides,
+            "gradeLevel": gradeLevel
         })
         # print("raw_result ", raw_result)
 

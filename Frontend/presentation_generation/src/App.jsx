@@ -40,7 +40,7 @@ function App() {
     console.log("file",fileInputRef.current.files[0]);
     const form = new FormData();
     form.append("context", formData.topic);
-    form.append("numberOfSlides", formData.slidesNumber);
+    form.append("numberOfSlides", String(formData.slidesNumber));
     form.append("gradeLevel", formData.gradeLevel);
     if (formData.file) {
       form.append("file", formData.file);
