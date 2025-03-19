@@ -87,11 +87,36 @@ async def generate_outline(context: str = Form(...),
                             detail=f"Failed to generate outline: {str(e)}")
 
 
-@app.post("/generate-presentation", response_model=OutlineGeneratorResponse)
-async def save_outline(request: OutlineGeneratorResponse):
+@app.post("/generate-presentation")
+async def generate_presentation(request: OutlineGeneratorResponse):
     try:
-        print(f"Request: {request}")
-        return OutlineGeneratorResponse(outlines=request.outlines)
+        template = load_text_file("prompts/slide_content_generation_prompt.txt")
+        template_types = ["titleAndBody", "titleAndBullets", "twoColumn", "sectionHeader"]
+        slide_contents = []
+
+        for i, outline in enumerate(request.outlines):
+            # Select template type based on content and position
+            template_type = template_types[i % len(template_types)]
+            if i == len(request.outlines) - 2:  # Ensure one twoColumn template
+                template_type = "twoColumn"
+
+            prompt = PromptTemplate(
+                template=template,
+                input_variables=["slide_title", "grade_level", "template_type"]
+            )
+
+            chain = prompt | model
+            result = await chain.ainvoke({
+                "slide_title": outline,
+                "grade_level": "UNIVERSITY",
+                "template_type": template_type
+            })
+
+            content = result.content if hasattr(result, 'content') else str(result)
+            slide_contents.append(content)
+
+        return {"slides": slide_contents}
 
     except Exception as e:
-        print(f"Error saving outline: {str(e)}")
+        print(f"Error generating presentation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate presentation: {str(e)}")

@@ -3,6 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 function OutlineHandler({ setOutlines, outlines, isGenerating }) {
   const [EditingIndex, setEditingindex] = useState(null);
+  const [slideContents, setSlideContents] = useState([]);
 
   const handlenewOutline = (e, index) => {
     const newOutlines = [...outlines];
@@ -49,13 +50,39 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
           <div className="outline-actions">
             <button
               className="action-btn"
-              onClick={() => {
-                handleSaveOutlines(outlines);
+              onClick={async () => {
+                try {
+                  const response = await axios.post("http://localhost:8000/generate-presentation", {
+                    outlines: outlines
+                  });
+                  
+                  if (response.data.slides) {
+                    setSlideContents(response.data.slides);
+                  }
+                } catch (error) {
+                  console.error("Error generating presentation:", error);
+                }
               }}
             >
-              Save Outline
+              Generate Presentation
             </button>
           </div>
+          {slideContents.length > 0 && (
+            <div className="presentation-slides">
+              <h3>Generated Presentation Content</h3>
+              {slideContents.map((content, index) => {
+                const slideData = JSON.parse(content);
+                return (
+                  <div key={index} className="slide-preview">
+                    <h4>Slide {index + 1}: {outlines[index]}</h4>
+                    <pre className="slide-content">
+                      {JSON.stringify(slideData, null, 2)}
+                    </pre>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       ) : (
         <p className="no-results">

@@ -216,4 +216,28 @@
   
   .action-btn:hover {
     background-color: #45a049;
-  }
+}
+
+.presentation-slides {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+}
+
+.slide-preview {
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.slide-content {
+    white-space: pre-wrap;
+    font-family: monospace;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+}
