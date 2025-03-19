@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, UploadFile, Form
 from services.schema import OutlineGeneratorRequest, OutlineGeneratorResponse
-from services.utils import save_uploaded_file, load_text_file,get_file_vectors
+from services.utils import save_uploaded_file, load_text_file, get_file_vectors
 from langchain_core.prompts import PromptTemplate  # Fixed import
 from langchain_openai import ChatOpenAI  # Changed to ChatOpenAI
 from dotenv import load_dotenv
@@ -21,8 +21,7 @@ app.add_middleware(
 )
 
 # Initialize the correct model for chat
-model = ChatOpenAI(model="gpt-3.5-turbo",
-                   temperature=0.7) 
+model = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
 
 
 @app.get("/")
@@ -31,12 +30,10 @@ def root():
 
 
 @app.post("/generate-outline", response_model=OutlineGeneratorResponse)
-async def generate_outline(
-    context: str = Form(...),
-    numberOfSlides: int = Form(...),
-    gradeLevel: str = Form(...),
-    file: UploadFile = None
-):
+async def generate_outline(context: str = Form(...),
+                           numberOfSlides: int = Form(...),
+                           gradeLevel: str = Form(...),
+                           file: UploadFile = None):
     try:
         file_path = None
         if file:
@@ -90,11 +87,11 @@ async def generate_outline(
                             detail=f"Failed to generate outline: {str(e)}")
 
 
-@app.post("/save-outline", response_model=OutlineGeneratorResponse)
+@app.post("/generate-presentation", response_model=OutlineGeneratorResponse)
 async def save_outline(request: OutlineGeneratorResponse):
-    try:    
+    try:
         print(f"Request: {request}")
         return OutlineGeneratorResponse(outlines=request.outlines)
 
-    except Exception as e:    
+    except Exception as e:
         print(f"Error saving outline: {str(e)}")
