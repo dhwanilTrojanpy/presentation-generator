@@ -1,6 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, Form
 from services.schema import OutlineGeneratorRequest, OutlineGeneratorResponse
-from services.utils import save_uploaded_file, load_text_file,get_file_vectors
+from services.utils import save_uploaded_file, load_text_file, get_file_vectors
 from langchain_core.prompts import PromptTemplate  # Fixed import
 from langchain_openai import ChatOpenAI  # Changed to ChatOpenAI
 from dotenv import load_dotenv
@@ -21,8 +21,7 @@ app.add_middleware(
 )
 
 # Initialize the correct model for chat
-model = ChatOpenAI(model="gpt-3.5-turbo",
-                   temperature=0.7) 
+model = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
 
 
 @app.get("/")
@@ -31,10 +30,14 @@ def root():
 
 
 @app.post("/generate-outline", response_model=OutlineGeneratorResponse)
-async def generate_outline(request: OutlineGeneratorRequest):
+async def generate_outline(context: str = Form(...),
+                           numberOfSlides: int = Form(...),
+                           gradeLevel: str = Form(...),
+                           file: UploadFile = None):
     try:
-        if request.file is None:
-            file_path = await save_uploaded_file(request.file.filename)
+        file_path = None
+        if file:
+            file_path = await save_uploaded_file(file)
             print(f"File saved at {file_path}")
             db = await get_file_vectors(file_path)
             print(f"DB: {db}")
@@ -49,9 +52,9 @@ async def generate_outline(request: OutlineGeneratorRequest):
         chain = prompt | model
         # Invoke the chain to get raw output
         raw_result = await chain.ainvoke({
-            "context": request.context,
-            "numberOfSlides": request.numberOfSlides,
-            "gradeLevel": request.gradeLevel
+            "context": context,
+            "numberOfSlides": numberOfSlides,
+            "gradeLevel": gradeLevel
         })
         # print("raw_result ", raw_result)
 
@@ -84,11 +87,36 @@ async def generate_outline(request: OutlineGeneratorRequest):
                             detail=f"Failed to generate outline: {str(e)}")
 
 
-@app.post("/save-outline", response_model=OutlineGeneratorResponse)
-async def save_outline(request: OutlineGeneratorResponse):
-    try:    
-        print(f"Request: {request}")
-        return OutlineGeneratorResponse(outlines=request.outlines)
+@app.post("/generate-presentation")
+async def generate_presentation(request: OutlineGeneratorResponse):
+    try:
+        template = load_text_file("prompts/slide_content_generation_prompt.txt")
+        template_types = ["titleAndBody", "titleAndBullets", "twoColumn", "sectionHeader"]
+        slide_contents = []
 
-    except Exception as e:    
-        print(f"Error saving outline: {str(e)}")
+        for i, outline in enumerate(request.outlines):
+            # Select template type based on content and position
+            template_type = template_types[i % len(template_types)]
+            if i == len(request.outlines) - 2:  # Ensure one twoColumn template
+                template_type = "twoColumn"
+
+            prompt = PromptTemplate(
+                template=template,
+                input_variables=["slide_title", "grade_level", "template_type"]
+            )
+
+            chain = prompt | model
+            result = await chain.ainvoke({
+                "slide_title": outline,
+                "grade_level": "UNIVERSITY",
+                "template_type": template_type
+            })
+
+            content = result.content if hasattr(result, 'content') else str(result)
+            slide_contents.append(content)
+
+        return {"slides": slide_contents}
+
+    except Exception as e:
+        print(f"Error generating presentation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate presentation: {str(e)}")

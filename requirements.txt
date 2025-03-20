@@ -6,5 +6,6 @@ langchain-openai
 fastapi
 uvicorn
 pypdf
+python-multipart
 langchain
 chromadb==0.4.15
