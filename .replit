@@ -1,11 +1,11 @@
-modules = ["nodejs-20", "python-3.12"]
-run = "uvicorn main:app --host 0.0.0.0 --port 3000"
+modules = ["nodejs-20", "python-3.12", "web"]
+run = "uvicorn undefined:app --host 0.0.0.0 --port 3000"
 
 [nix]
 channel = "stable-24_05"
 
 [deployment]
-run = ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port 3000"]
+run = ["sh", "-c", "uvicorn undefined:app --host 0.0.0.0 --port 3000"]
 
 [[ports]]
 localPort = 3000
@@ -19,3 +19,15 @@ exposeLocalhost = true
 localPort = 8000
 externalPort = 3000
 exposeLocalhost = true
+
+[workflows]
+runButton = "Run Server"
+
+[[workflows.workflow]]
+name = "Run Server"
+author = 40122020
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "uvicorn Backend.main:app --host 0.0.0.0 --port 8000 --reload"

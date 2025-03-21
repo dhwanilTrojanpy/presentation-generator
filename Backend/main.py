@@ -2,11 +2,15 @@ from fastapi import FastAPI, HTTPException, UploadFile, Form
 from services.schema import OutlineGeneratorRequest, OutlineGeneratorResponse
 from services.utils import save_uploaded_file, load_text_file, get_file_vectors
 from langchain_core.prompts import PromptTemplate  # Fixed import
-from langchain_openai import ChatOpenAI  # Changed to ChatOpenAI
+# from langchain_openai import ChatOpenAI  # Changed to ChatOpenAI
+# from langchain_google_vertexai import VertexAI  # Using Vertex AI for chat
+# import vertexai
 from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAI
 from fastapi.middleware.cors import CORSMiddleware
 # from langchain_core.output_parsers import JsonOutputParser
 import os
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -20,8 +24,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+project_id = os.getenv("GCP_PROJECT_ID")
+location = os.getenv("GCP_LOCATION")
+# vertexai.init(project=project_id, location=location)
+
 # Initialize the correct model for chat
-model = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+model = GoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
+
 
 
 @app.get("/")
@@ -87,8 +96,11 @@ async def generate_outline(context: str = Form(...),
                             detail=f"Failed to generate outline: {str(e)}")
 
 
+class PresentationRequest(BaseModel):
+    outlines: list[str]
+
 @app.post("/generate-presentation")
-async def generate_presentation(request: OutlineGeneratorResponse):
+async def generate_presentation(request: PresentationRequest):
     try:
         template = load_text_file("prompts/slide_content_generation_prompt.txt")
         template_types = ["titleAndBody", "titleAndBullets", "twoColumn", "sectionHeader"]
