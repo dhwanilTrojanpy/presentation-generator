@@ -20,6 +20,20 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
       outlines: outlines,
     });
   };
+  const generatePresentation = async () => {
+    try {
+      const response = await axios.post('http://localhost:8000/generate-presentation', {
+        outlines: outlines
+      });
+      if (response.data && response.data.slides) {
+        setSlideContents(response.data.slides);
+      } else {
+        console.error('Invalid response format:', response.data);
+      }
+    } catch (error) {
+      console.error('Error generating presentation:', error.response?.data?.detail || error.message);
+    }
+  };
   return (
     <div>
       <h2>Your Presentation Outline</h2>
@@ -50,19 +64,7 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
           <div className="outline-actions">
             <button
               className="action-btn"
-              onClick={async () => {
-                try {
-                  const response = await axios.post("http://localhost:8000/generate-presentation", {
-                    outlines: outlines
-                  });
-                  
-                  if (response.data.slides) {
-                    setSlideContents(response.data.slides);
-                  }
-                } catch (error) {
-                  console.error("Error generating presentation:", error);
-                }
-              }}
+              onClick={generatePresentation}
             >
               Generate Presentation
             </button>
