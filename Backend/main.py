@@ -6,7 +6,7 @@ from langchain_core.prompts import PromptTemplate  # Fixed import
 # from langchain_google_vertexai import VertexAI  # Using Vertex AI for chat
 # import vertexai
 from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAI
+from langchain_google_genai import GoogleGenerativeAI
 from fastapi.middleware.cors import CORSMiddleware
 # from langchain_core.output_parsers import JsonOutputParser
 import os
