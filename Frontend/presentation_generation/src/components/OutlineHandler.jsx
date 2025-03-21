@@ -4,7 +4,7 @@ import axios from "axios";
 function OutlineHandler({ setOutlines, outlines, isGenerating }) {
   const [EditingIndex, setEditingindex] = useState(null);
   const [slideContents, setSlideContents] = useState([]);
-const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
+  const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
 
   const handlenewOutline = (e, index) => {
     const newOutlines = [...outlines];
@@ -24,16 +24,22 @@ const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
   const generatePresentation = async () => {
     try {
       setIsGeneratingSlides(true);
-      const response = await axios.post('http://localhost:8000/generate-presentation', {
-        outlines: outlines
-      });
+      const response = await axios.post(
+        "http://localhost:8000/generate-presentation",
+        {
+          outlines: outlines,
+        },
+      );
       if (response.data && response.data.slides) {
         setSlideContents(response.data.slides);
       } else {
-        console.error('Invalid response format:', response.data);
+        console.error("Invalid response format:", response.data);
       }
     } catch (error) {
-      console.error('Error generating presentation:', error.response?.data?.detail || error.message);
+      console.error(
+        "Error generating presentation:",
+        error.response?.data?.detail || error.message,
+      );
     } finally {
       setIsGeneratingSlides(false);
     }
@@ -81,7 +87,9 @@ const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
                 let slideData;
                 try {
                   // Remove markdown formatting if present
-                  const cleanContent = content.replace(/```json\n|\n```/g, '').trim();
+                  const cleanContent = content
+                    .replace(/```json\n|\n```/g, "")
+                    .trim();
                   slideData = JSON.parse(cleanContent);
                 } catch (error) {
                   console.error("Failed to parse JSON:", error);
@@ -89,7 +97,9 @@ const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
                 }
                 return (
                   <div key={index} className="slide-preview">
-                    <h4>Slide {index + 1}: {outlines[index]}</h4>
+                    <h4>
+                      Slide {index + 1}: {outlines[index]}
+                    </h4>
                     <pre className="slide-content">
                       {JSON.stringify(slideData, null, 2)}
                     </pre>
