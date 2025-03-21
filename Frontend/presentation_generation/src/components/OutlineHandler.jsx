@@ -98,7 +98,7 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
                 return (
                   <div key={index} className="slide-preview">
                     <h4>
-                      Slide {index + 1}: {outlines[index]}
+                      {outlines[index]}
                     </h4>
                     <pre className="slide-content">
                       {JSON.stringify(slideData, null, 2)}
