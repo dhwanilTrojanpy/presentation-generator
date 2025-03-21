@@ -4,6 +4,7 @@ import axios from "axios";
 function OutlineHandler({ setOutlines, outlines, isGenerating }) {
   const [EditingIndex, setEditingindex] = useState(null);
   const [slideContents, setSlideContents] = useState([]);
+const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
 
   const handlenewOutline = (e, index) => {
     const newOutlines = [...outlines];
@@ -22,6 +23,7 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
   };
   const generatePresentation = async () => {
     try {
+      setIsGeneratingSlides(true);
       const response = await axios.post('http://localhost:8000/generate-presentation', {
         outlines: outlines
       });
@@ -32,6 +34,8 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
       }
     } catch (error) {
       console.error('Error generating presentation:', error.response?.data?.detail || error.message);
+    } finally {
+      setIsGeneratingSlides(false);
     }
   };
   return (
@@ -65,8 +69,9 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
             <button
               className="action-btn"
               onClick={generatePresentation}
+              disabled={isGeneratingSlides}
             >
-              Generate Presentation
+              {isGeneratingSlides ? "Generating..." : "Generate Presentation"}
             </button>
           </div>
           {slideContents.length > 0 && (
