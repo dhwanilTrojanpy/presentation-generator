@@ -71,7 +71,15 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
             <div className="presentation-slides">
               <h3>Generated Presentation Content</h3>
               {slideContents.map((content, index) => {
-                const slideData = JSON.parse(content);
+                let slideData;
+                try {
+                  // Remove markdown formatting if present
+                  const cleanContent = content.replace(/```json\n|\n```/g, '').trim();
+                  slideData = JSON.parse(cleanContent);
+                } catch (error) {
+                  console.error("Failed to parse JSON:", error);
+                  slideData = { error: "Failed to parse slide content" };
+                }
                 return (
                   <div key={index} className="slide-preview">
                     <h4>Slide {index + 1}: {outlines[index]}</h4>

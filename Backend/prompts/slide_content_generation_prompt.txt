@@ -17,4 +17,13 @@ Requirements:
 - No special formatting symbols (**, *, _, ~)
 - No line breaks or markdown
 
+IMPORTANT: Return a clean JSON object without any markdown formatting or backticks.
+
 Generate content for this template type: {template_type}
+
+Example format:
+{
+  "title": "Slide Title",
+  "content": "Slide content here",
+  "template": "templateType"
+}
