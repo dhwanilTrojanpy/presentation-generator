@@ -5,7 +5,7 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
   const [EditingIndex, setEditingindex] = useState(null);
   const [slideContents, setSlideContents] = useState([]);
   const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
-  const [finalSlideContent, setFinalSlideContent] = useState([]);
+  // const [finalSlideContent, setFinalSlideContent] = useState([]);
   const handlenewOutline = (e, index) => {
     const newOutlines = [...outlines];
     console.log("TextContent", e);
@@ -17,17 +17,16 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
   };
 
   const generatePresentation = async () => {
-    console.log("slideContents",finalSlideContent );
-    axios.post("http://localhost:8000/geneate-presentation", {
-      slideContents: slideContents  
-    })
+    try {
+      console.log("Generating presentation with slides:", slideContents);
+      const response = await axios.post("http://localhost:8000/generate-presentation", {
+        slides: slideContents
+      });
+      console.log("Presentation generated:", response.data);
+    } catch (error) {
+      console.error("Error generating presentation:", error.response?.data || error.message);
+    }
   }
-  // const handleSaveOutlines = (outlines) => {
-  //   console.log("outlines", outlines);
-  //   axios.post("http://localhost:8000/geneate-presentation", {
-  //     outlines: outlines,
-  //   });
-  // };
   const generateSlideContent = async () => {
     try {
       setIsGeneratingSlides(true);
@@ -92,31 +91,20 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
             <div className="presentation-slides">
               <h3>Generated Presentation Content</h3>
               {slideContents.map((content, index) => {
-                // var slideData;
-                try {
-                  // Remove markdown formatting if present
-                  // const cleanContent = content
-                  //   .replace(/```json\n|\n```/g, "")
-                  //   .trim();
-                  slideData = JSON.parse(content);
-                } catch (error) {
-                  console.error("Failed to parse JSON:", error);
-                  slideData = { error: "Failed to parse slide content" };
-                }
                 return (
                   <div key={index} className="slide-preview">
                     <h4>
                       {outlines[index]}
                     </h4>
                     <pre className="slide-content">
-                      {JSON.stringify(slideData, null, 2)}
+                      {JSON.stringify(content, null, 2)}
                     </pre>
                   </div>
                 );
               })}
                <button
           className="action-btn"
-            onClick={generatePresentation}
+            onClick={() => generatePresentation()}
             >
             Generate Presentation
           </button>

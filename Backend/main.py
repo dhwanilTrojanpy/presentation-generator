@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, UploadFile, Form
-from services.schema import OutlineGeneratorRequest, OutlineGeneratorResponse
+from services.schema import OutlineGeneratorRequest, OutlineGeneratorResponse, PresentationRequest, SlideContentRequest
 from services.utils import clean_markup_content, save_uploaded_file, load_text_file, get_file_vectors
 from langchain_core.prompts import PromptTemplate  # Fixed import
 # from langchain_openai import ChatOpenAI  # Changed to ChatOpenAI
@@ -96,11 +96,8 @@ async def generate_outline(context: str = Form(...),
                             detail=f"Failed to generate outline: {str(e)}")
 
 
-class PresentationRequest(BaseModel):
-    outlines: list[str]
-
 @app.post("/generate-slide-content", response_model=dict)
-async def generate_presentation(request: PresentationRequest):
+async def generate_slide_content(request: SlideContentRequest):
     try:
         template = load_text_file("prompts/slide_content_generation_prompt.txt")
         template_types = ["titleAndBody", "titleAndBullets", "twoColumn", "sectionHeader"]
