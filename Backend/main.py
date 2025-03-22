@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, UploadFile, Form
 from services.schema import OutlineGeneratorRequest, OutlineGeneratorResponse
-from services.utils import save_uploaded_file, load_text_file, get_file_vectors
+from services.utils import clean_markup_content, save_uploaded_file, load_text_file, get_file_vectors
 from langchain_core.prompts import PromptTemplate  # Fixed import
 # from langchain_openai import ChatOpenAI  # Changed to ChatOpenAI
 # from langchain_google_vertexai import VertexAI  # Using Vertex AI for chat
@@ -99,7 +99,7 @@ async def generate_outline(context: str = Form(...),
 class PresentationRequest(BaseModel):
     outlines: list[str]
 
-@app.post("/generate-presentation")
+@app.post("/generate-slide-content", response_model=dict)
 async def generate_presentation(request: PresentationRequest):
     try:
         template = load_text_file("prompts/slide_content_generation_prompt.txt")
@@ -125,10 +125,16 @@ async def generate_presentation(request: PresentationRequest):
             })
 
             content = result.content if hasattr(result, 'content') else str(result)
-            slide_contents.append(content)
-
+            cleaned_content = clean_markup_content(content)
+            slide_contents.append(cleaned_content)
+        print(type(slide_contents))
         return {"slides": slide_contents}
 
     except Exception as e:
         print(f"Error generating presentation: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate presentation: {str(e)}")
+    
+@app.post("/generate-presentation")
+async def generate_presentation(request: PresentationRequest):
+    print("Presentation Request", request)    
+    

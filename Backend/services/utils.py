@@ -1,6 +1,8 @@
 import os
 import shutil
 import uuid
+import re
+import json
 from dotenv import load_dotenv
 from fastapi import HTTPException, UploadFile
 from langchain_community.document_loaders import PyPDFLoader
@@ -79,3 +81,11 @@ async def save_uploaded_file(file: UploadFile) -> str:
         await file.close()
 
 # generate_RAG_response()
+        
+def clean_markup_content(content):
+    json_string = re.sub(r'```json|```', '', content).strip()
+    try:
+        json_object = json.loads(json_string)
+        return json_object
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON: {str(e)}")        

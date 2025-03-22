@@ -5,7 +5,7 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
   const [EditingIndex, setEditingindex] = useState(null);
   const [slideContents, setSlideContents] = useState([]);
   const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
-
+  const [finalSlideContent, setFinalSlideContent] = useState([]);
   const handlenewOutline = (e, index) => {
     const newOutlines = [...outlines];
     console.log("TextContent", e);
@@ -15,22 +15,30 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
   const handleEdit = (index) => {
     setEditingindex(EditingIndex === index ? null : index);
   };
-  const handleSaveOutlines = (outlines) => {
-    console.log("outlines", outlines);
-    axios.post("http://localhost:8000/geneate-presentation", {
-      outlines: outlines,
-    });
-  };
+
   const generatePresentation = async () => {
+    console.log("slideContents",finalSlideContent );
+    axios.post("http://localhost:8000/geneate-presentation", {
+      slideContents: slideContents  
+    })
+  }
+  // const handleSaveOutlines = (outlines) => {
+  //   console.log("outlines", outlines);
+  //   axios.post("http://localhost:8000/geneate-presentation", {
+  //     outlines: outlines,
+  //   });
+  // };
+  const generateSlideContent = async () => {
     try {
       setIsGeneratingSlides(true);
       const response = await axios.post(
-        "http://localhost:8000/generate-presentation",
+        "http://localhost:8000/generate-slide-content",
         {
           outlines: outlines,
         },
       );
       if (response.data && response.data.slides) {
+        console.log("slideContents", response.data.slides);
         setSlideContents(response.data.slides);
       } else {
         console.error("Invalid response format:", response.data);
@@ -74,23 +82,23 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
           <div className="outline-actions">
             <button
               className="action-btn"
-              onClick={generatePresentation}
+              onClick={generateSlideContent}
               disabled={isGeneratingSlides}
             >
-              {isGeneratingSlides ? "Generating..." : "Generate Presentation"}
+              {isGeneratingSlides ? "Generating..." : "Generate Slide Content"}
             </button>
           </div>
           {slideContents.length > 0 && (
             <div className="presentation-slides">
               <h3>Generated Presentation Content</h3>
               {slideContents.map((content, index) => {
-                let slideData;
+                // var slideData;
                 try {
                   // Remove markdown formatting if present
-                  const cleanContent = content
-                    .replace(/```json\n|\n```/g, "")
-                    .trim();
-                  slideData = JSON.parse(cleanContent);
+                  // const cleanContent = content
+                  //   .replace(/```json\n|\n```/g, "")
+                  //   .trim();
+                  slideData = JSON.parse(content);
                 } catch (error) {
                   console.error("Failed to parse JSON:", error);
                   slideData = { error: "Failed to parse slide content" };
@@ -106,9 +114,17 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
                   </div>
                 );
               })}
+               <button
+          className="action-btn"
+            onClick={generatePresentation}
+            >
+            Generate Presentation
+          </button>
             </div>
           )}
+         
         </div>
+        
       ) : (
         <p className="no-results">
           {isGenerating
