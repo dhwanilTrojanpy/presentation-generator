@@ -5,7 +5,7 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
   const [EditingIndex, setEditingindex] = useState(null);
   const [slideContents, setSlideContents] = useState([]);
   const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
-  // const [finalSlideContent, setFinalSlideContent] = useState([]);
+  const [finalResponse, setFinalresponse] = useState("");
   const handlenewOutline = (e, index) => {
     const newOutlines = [...outlines];
     console.log("TextContent", e);
@@ -19,10 +19,12 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
   const generatePresentation = async () => {
     try {
       console.log("Generating presentation with slides:", slideContents);
-      const response = await axios.post("http://localhost:8000/generate-presentation", {
+      await axios.post("http://localhost:8000/generate-presentation", {
         slides: slideContents
+      }).then((response) => {
+        setFinalresponse(response.message);
       });
-      console.log("Presentation generated:", response.data);
+      
     } catch (error) {
       console.error("Error generating presentation:", error.response?.data || error.message);
     }
