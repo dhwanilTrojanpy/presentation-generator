@@ -1,0 +1,28 @@
+
+Create a photorealistic, high-quality presentation slide image based on:
+
+Template Type: {template_type}
+Title: {slide_title}
+
+Content Instructions:
+{%- if template_type == "titleAndBody" %}
+Create a visual representation that captures the main concepts from this body text:
+{key_points}
+{%- elif template_type == "titleAndBullets" %}
+Create a visual that synthesizes these key points:
+{key_points}
+{%- elif template_type == "twoColumn" %}
+Create a split visual representing both aspects:
+Left Side - {key_points}
+{%- elif template_type == "sectionHeader" %}
+Create an impactful header image that represents:
+{key_points}
+{%- endif %}
+
+Style requirements:
+- Professional and academic aesthetic
+- Clean, minimalist composition
+- 16:9 aspect ratio
+- Suitable for educational/scientific presentations
+- Photorealistic imagery
+- No text overlay

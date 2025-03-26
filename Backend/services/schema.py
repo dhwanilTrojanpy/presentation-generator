@@ -17,5 +17,8 @@ class OutlineGeneratorRequest(BaseModel):
 class OutlineGeneratorResponse(BaseModel):
     outlines : list[str] = Field(..., description="The generated outline")
 
-# class SavedOutline(BaseModel):
-#     ot
+class SlideContentRequest(BaseModel):
+    outlines: list[str]
+
+class PresentationRequest(BaseModel):
+    slides: list[dict] =Field(..., description="List of slide contents for the presentation")  

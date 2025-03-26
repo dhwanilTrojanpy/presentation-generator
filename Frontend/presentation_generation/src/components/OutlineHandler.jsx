@@ -4,7 +4,8 @@ import axios from "axios";
 function OutlineHandler({ setOutlines, outlines, isGenerating }) {
   const [EditingIndex, setEditingindex] = useState(null);
   const [slideContents, setSlideContents] = useState([]);
-
+  const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
+  const [finalResponse, setFinalresponse] = useState("");
   const handlenewOutline = (e, index) => {
     const newOutlines = [...outlines];
     console.log("TextContent", e);
@@ -14,11 +15,43 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
   const handleEdit = (index) => {
     setEditingindex(EditingIndex === index ? null : index);
   };
-  const handleSaveOutlines = (outlines) => {
-    console.log("outlines", outlines);
-    axios.post("http://localhost:8000/geneate-presentation", {
-      outlines: outlines,
-    });
+
+  const generatePresentation = async () => {
+    try {
+      console.log("Generating presentation with slides:", slideContents);
+      await axios.post("http://localhost:8000/generate-presentation", {
+        slides: slideContents
+      }).then((response) => {
+        setFinalresponse(response.message);
+      });
+      
+    } catch (error) {
+      console.error("Error generating presentation:", error.response?.data || error.message);
+    }
+  }
+  const generateSlideContent = async () => {
+    try {
+      setIsGeneratingSlides(true);
+      const response = await axios.post(
+        "http://localhost:8000/generate-slide-content",
+        {
+          outlines: outlines,
+        },
+      );
+      if (response.data && response.data.slides) {
+        console.log("slideContents", response.data.slides);
+        setSlideContents(response.data.slides);
+      } else {
+        console.error("Invalid response format:", response.data);
+      }
+    } catch (error) {
+      console.error(
+        "Error generating presentation:",
+        error.response?.data?.detail || error.message,
+      );
+    } finally {
+      setIsGeneratingSlides(false);
+    }
   };
   return (
     <div>
@@ -50,40 +83,38 @@ function OutlineHandler({ setOutlines, outlines, isGenerating }) {
           <div className="outline-actions">
             <button
               className="action-btn"
-              onClick={async () => {
-                try {
-                  const response = await axios.post("http://localhost:8000/generate-presentation", {
-                    outlines: outlines
-                  });
-                  
-                  if (response.data.slides) {
-                    setSlideContents(response.data.slides);
-                  }
-                } catch (error) {
-                  console.error("Error generating presentation:", error);
-                }
-              }}
+              onClick={generateSlideContent}
+              disabled={isGeneratingSlides}
             >
-              Generate Presentation
+              {isGeneratingSlides ? "Generating..." : "Generate Slide Content"}
             </button>
           </div>
           {slideContents.length > 0 && (
             <div className="presentation-slides">
               <h3>Generated Presentation Content</h3>
               {slideContents.map((content, index) => {
-                const slideData = JSON.parse(content);
                 return (
                   <div key={index} className="slide-preview">
-                    <h4>Slide {index + 1}: {outlines[index]}</h4>
+                    <h4>
+                      {outlines[index]}
+                    </h4>
                     <pre className="slide-content">
-                      {JSON.stringify(slideData, null, 2)}
+                      {JSON.stringify(content, null, 2)}
                     </pre>
                   </div>
                 );
               })}
+               <button
+          className="action-btn"
+            onClick={() => generatePresentation()}
+            >
+            Generate Presentation
+          </button>
             </div>
           )}
+         
         </div>
+        
       ) : (
         <p className="no-results">
           {isGenerating

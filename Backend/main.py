@@ -1,12 +1,16 @@
 from fastapi import FastAPI, HTTPException, UploadFile, Form
-from services.schema import OutlineGeneratorRequest, OutlineGeneratorResponse
-from services.utils import save_uploaded_file, load_text_file, get_file_vectors
-from langchain_core.prompts import PromptTemplate  # Fixed import
-from langchain_openai import ChatOpenAI  # Changed to ChatOpenAI
-from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-# from langchain_core.output_parsers import JsonOutputParser
 import os
+
+from services.schema import OutlineGeneratorResponse, PresentationRequest, SlideContentRequest
+from services.utils import clean_markup_content, save_uploaded_file, load_text_file, get_file_vectors
+from dotenv import load_dotenv
+
+from langchain_core.prompts import PromptTemplate  # Fixed import
+import vertexai
+from vertexai.preview.vision_models import ImageGenerationModel
+from langchain_google_genai import GoogleGenerativeAI
+# from langchain_core.output_parsers import JsonOutputParser
 
 load_dotenv()
 
@@ -20,8 +24,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+project_id = os.getenv("PROJECT_ID")
+location = os.getenv("LOCATION")
+# vertexai.init(project=project_id, location=location)
+
 # Initialize the correct model for chat
-model = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+model = GoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
+image_generation_model = ImageGenerationModel.from_pretrained("imagegeneration@002")
 
 
 @app.get("/")
@@ -87,8 +96,8 @@ async def generate_outline(context: str = Form(...),
                             detail=f"Failed to generate outline: {str(e)}")
 
 
-@app.post("/generate-presentation")
-async def generate_presentation(request: OutlineGeneratorResponse):
+@app.post("/generate-slide-content", response_model=dict)
+async def generate_slide_content(request: SlideContentRequest):
     try:
         template = load_text_file("prompts/slide_content_generation_prompt.txt")
         template_types = ["titleAndBody", "titleAndBullets", "twoColumn", "sectionHeader"]
@@ -113,10 +122,51 @@ async def generate_presentation(request: OutlineGeneratorResponse):
             })
 
             content = result.content if hasattr(result, 'content') else str(result)
-            slide_contents.append(content)
-
+            cleaned_content = clean_markup_content(content)
+            slide_contents.append(cleaned_content)
+        print(type(slide_contents))
         return {"slides": slide_contents}
 
     except Exception as e:
         print(f"Error generating presentation: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate presentation: {str(e)}")
+    
+@app.post("/generate-presentation")
+async def generate_presentation(request: PresentationRequest):
+    try:
+        vertexai.init(project=project_id, location=location)
+        template = load_text_file("prompts/presentation_generation_prompt.txt")
+        for slide in request.slides:
+            slide_title = slide.get("title", "")
+            template_type = slide.get("template", "")
+            key_points = ""
+            if slide.get("template") == "titleAndBody":
+                key_points += slide.get("body", "")
+            elif slide.get("template") == "titleAndBullets":
+                key_points += "\n".join(slide.get("bullets", []))
+            elif slide.get("template") == "twoColumn":
+                key_points += f"{slide.get('leftColumn', {}).get('body', '')}\n{slide.get('rightColumn', {}).get('body', '')}"
+
+            prompt = PromptTemplate (
+                template = template,
+                input_variables=["slide_title", "template_type", "key_points"]
+            )   
+            formatted_prompt = prompt.format(
+                slide_title=slide_title,
+                template_type=template_type,
+                key_points=key_points
+            )
+
+            images = image_generation_model.generate_images(
+                prompt=formatted_prompt,
+                # Optional parameters
+                number_of_images=1,
+                seed=1,
+                add_watermark=False,
+            )
+        return {"message": "Presentation generation initiated"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate presentation: {str(e)}")
+ 
+    
