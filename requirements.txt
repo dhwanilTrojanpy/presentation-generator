@@ -11,3 +11,4 @@ langchain
 chromadb==0.4.15
 langchain_google_genai
 langsmith
+pillow

@@ -1,28 +1,12 @@
+Create a professional, high-quality, photorealistic image for a presentation slide with the following details:
 
-Create a photorealistic, high-quality presentation slide image based on:
-
-Template Type: {template_type}
 Title: {slide_title}
+Type: {template_type}
+Key Points: {key_points}
 
-Content Instructions:
-{%- if template_type == "titleAndBody" %}
-Create a visual representation that captures the main concepts from this body text:
-{key_points}
-{%- elif template_type == "titleAndBullets" %}
-Create a visual that synthesizes these key points:
-{key_points}
-{%- elif template_type == "twoColumn" %}
-Create a split visual representing both aspects:
-Left Side - {key_points}
-{%- elif template_type == "sectionHeader" %}
-Create an impactful header image that represents:
-{key_points}
-{%- endif %}
+The image should be visually appealing, 
+relevant to the content, and suitable for a professional presentation.
 
-Style requirements:
-- Professional and academic aesthetic
-- Clean, minimalist composition
-- 16:9 aspect ratio
-- Suitable for educational/scientific presentations
-- Photorealistic imagery
-- No text overlay
+Requuirements for How image should be :
+1. Image should should have ghibli effect.
+2. Image should be ittle bit bulrry.
